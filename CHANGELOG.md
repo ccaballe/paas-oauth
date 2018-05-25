@@ -2,7 +2,7 @@
 
 ## 0.2.0 (upcoming)
 
-* Pending changelog
+* Remove role validation 
 
 ## 0.1.0 (October 26, 2017)
 

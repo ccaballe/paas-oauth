@@ -30,7 +30,7 @@ type loginResponse struct {
 type profileAttributesStruct struct {
 	Mail string `json:"mail"`
 
-	Roles []string `json:"roles"`
+	//Roles []string `json:"roles"`
 }
 
 type profileStruct struct {
@@ -85,29 +85,14 @@ func handleLogin(ctx context.Context, w http.ResponseWriter, r *http.Request) *c
 	}
 
         var mail string
-        var roles []string
 
 	// Look for user attributes: mail and roles
 	for _, val := range um.Attributes {
 		if val.Mail != "" {
 			mail = val.Mail
 		}
-		if val.Roles != nil {
-			roles = val.Roles
-		}
 	}
 
-	// check if user is authorized
-	authorized_role := ctx.Value("authorized-role").(string)
-	authorized := false
-	for _, val := range roles {
-		if val == authorized_role {
-			authorized = true
-		}
-	}
-	if !authorized {
-		return common.NewHttpError("User " + mail + " unauthorized (missing role: " + authorized_role + ")", http.StatusUnauthorized)
-	}
 	const cookieMaxAge = 3600 * 6 // 6 hours
 	// required for IE 6, 7 and 8
 	expiresTime := time.Now().Add(cookieMaxAge * time.Second)
@@ -147,6 +132,7 @@ func handleLogin(ctx context.Context, w http.ResponseWriter, r *http.Request) *c
 	user := User{
 		Uid:         um.Id,
 		Description: um.Id,
+		// TODO: maybe include tenant here?
 	}
 	userBytes, err := json.Marshal(user)
 	if err != nil {
