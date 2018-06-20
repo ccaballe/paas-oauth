@@ -28,9 +28,12 @@ type loginResponse struct {
 }
 
 type profileAttributesStruct struct {
+
 	Mail string `json:"mail"`
 
-	//Roles []string `json:"roles"`
+	Groups []string `json:"groups"`
+
+	Tenant string `json:"tenant"`
 }
 
 type profileStruct struct {
@@ -84,12 +87,23 @@ func handleLogin(ctx context.Context, w http.ResponseWriter, r *http.Request) *c
 		log.Print("error %w", err)
 	}
 
-        var mail string
+	var uid = um.Id
+	var mail string
+	var groups []string
+	var tenant string
 
 	// Look for user attributes: mail and roles
 	for _, val := range um.Attributes {
 		if val.Mail != "" {
 			mail = val.Mail
+		}
+
+		if val.Groups != nil {
+			groups = val.Groups
+		}
+
+		if val.Tenant != "" {
+			tenant = val.Tenant
 		}
 	}
 
@@ -98,8 +112,11 @@ func handleLogin(ctx context.Context, w http.ResponseWriter, r *http.Request) *c
 	expiresTime := time.Now().Add(cookieMaxAge * time.Second)
 
 	claims := jose.Claims{
-		"uid": mail,
+		"uid": uid,
+		"mail": mail,
 		"exp": expiresTime.Unix(),
+		"groups": groups,
+		"tenant": tenant,
 	}
 
 	secretKey, _ := ctx.Value("secret-key").([]byte)
@@ -132,7 +149,6 @@ func handleLogin(ctx context.Context, w http.ResponseWriter, r *http.Request) *c
 	user := User{
 		Uid:         um.Id,
 		Description: um.Id,
-		// TODO: maybe include tenant here?
 	}
 	userBytes, err := json.Marshal(user)
 	if err != nil {
