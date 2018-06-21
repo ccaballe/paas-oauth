@@ -28,6 +28,7 @@ type loginResponse struct {
 }
 
 type profileAttributesStruct struct {
+	CN string `json:"cn"`
 
 	Mail string `json:"mail"`
 
@@ -88,12 +89,17 @@ func handleLogin(ctx context.Context, w http.ResponseWriter, r *http.Request) *c
 	}
 
 	var uid = um.Id
+	var cn string
 	var mail string
 	var groups []string
 	var tenant string
 
 	// Look for user attributes: mail and roles
 	for _, val := range um.Attributes {
+		if val.CN != "" {
+			cn = val.CN
+		}
+
 		if val.Mail != "" {
 			mail = val.Mail
 		}
@@ -114,6 +120,7 @@ func handleLogin(ctx context.Context, w http.ResponseWriter, r *http.Request) *c
 	claims := jose.Claims{
 		"uid": uid,
 		"mail": mail,
+		"cn": cn,
 		"exp": expiresTime.Unix(),
 		"groups": groups,
 		"tenant": tenant,
